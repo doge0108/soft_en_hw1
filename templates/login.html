@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block title %}Login{% endblock %}
+{% block content %}
+
+<style>
+    input[type="text"], input[type="password"] {
+        width: 50%; 
+        padding: 12px 20px;
+        margin: 8px 0;
+        display: inline-block;
+        border: 1px solid #ccc;
+        box-sizing: border-box;
+        font-size: 16px;
+    }
+    button {
+        width: 50%;
+        background-color: #04c5ff;
+        color: white;
+        padding: 14px 20px;
+        margin: 8px 0;
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+    }
+</style>
+<h1><a href="/" style="text-decoration: none; color: inherit;">Leave Requests</a></h1>
+
+<h1>Login</h1>
+<form id="loginForm">
+    <input type="text" name="username" placeholder="Username">
+    <input type="password" name="password" placeholder="Password">
+    <button type="submit">Login</button>
+</form>
+<script>
+document.getElementById('loginForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+
+    const formData = new FormData(this);
+    fetch('/login/', {
+        method: 'POST',
+        body: formData,
+        redirect: 'follow'
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Login failed: Incorrect username or password');
+        }
+        if (response.url.includes('/leave-requests/')) {
+            window.location.href = response.url;
+        } else {
+            return response.json();
+        }
+    })
+    .catch(error => {
+        alert(error.message);
+    });
+});
+</script>
+{% endblock %}
+

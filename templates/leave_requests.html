@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+    .logout-button {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+    }
+    .leave-request-box {
+        border: 1px solid #ffffff;
+        padding: 10px;
+        margin-bottom: 10px;
+        background-color: #ffffff;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    th, td {
+        border: 1px solid #000000;
+        padding: 8px;
+        text-align: middle;
+    }
+    th {
+        background-color: #ffffff;
+    }
+</style>
+
+<div class="logout-button">
+    <form action="/logout/" method="get">
+        <button type="submit">Logout</button>
+    </form>
+</div>
+
+<h1>Leave Requests</h1>
+
+<form method="post" action="/submit-leave-request/">
+    <input type="date" name="leave_date">
+    <input type="text" name="reason" placeholder="Reason for leave">
+    <button type="submit">Request Leave</button>
+</form>
+
+<div class="leave-request-box">
+    <table>
+        <thead>
+            <tr>
+                <th>Username</th>
+                <th>Date</th>
+                <th>Reason</th>
+                <th>Approved</th>
+                {% if user.username == "admin" %}
+                    <th>Actions</th>
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for leave_request, username in leave_requests %}
+                <tr>
+                    <td>{{ username }}</td>
+                    <td>{{ leave_request.date }}</td>
+                    <td>{{ leave_request.reason }}</td>
+                    <td>{{ "Yes" if leave_request.approved else "No" }}</td>
+                    {% if user.username == "admin" %}
+                        <td>
+                            {% if not leave_request.approved %}
+                                <button type="button" onclick="approveLeave({{ leave_request.id }})">Approve</button>
+                            {% endif %}
+                        </td>
+                    {% endif %}
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<script>
+    function approveLeave(leaveId) {
+    fetch('/approve-leave/' + leaveId, { method: 'POST' })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Failed to approve');
+        }
+        return response.json();
+    })
+    .then(data => {
+        alert(data.message);
+        window.location.reload();
+    })
+    .catch(error => {
+        alert('Error: ' + error.message);
+    });
+}
+
+</script>
+{% endblock %}
