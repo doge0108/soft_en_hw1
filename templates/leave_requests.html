@@ -24,6 +24,13 @@
     th {
         background-color: #ffffff;
     }
+    .delete-button {
+        color: red;
+        cursor: pointer;
+    }
+    .delete-button:hover {
+        color: darkred;
+    }
 </style>
 
 <div class="logout-button">
@@ -34,7 +41,7 @@
 
 <h1>Leave Requests</h1>
 
-<form method="post" action="/submit-leave-request/">
+<form id="leaveRequestForm" method="post" action="/submit-leave-request/">
     <input type="date" name="leave_date">
     <input type="text" name="reason" placeholder="Reason for leave">
     <button type="submit">Request Leave</button>
@@ -51,6 +58,7 @@
                 {% if user.username == "admin" %}
                     <th>Actions</th>
                 {% endif %}
+                <th>Delete</th>
             </tr>
         </thead>
         <tbody>
@@ -66,6 +74,13 @@
                                 <button type="button" onclick="approveLeave({{ leave_request.id }})">Approve</button>
                             {% endif %}
                         </td>
+                    {% endif %}
+                    {% if user.username == "admin" or leave_request.user_id == user.id %}
+                    <td>
+                        {% if leave_request.date > now%}
+                            <button type="button" onclick="deleteLeave({{ leave_request.id }})" class="delete-button">X</button>
+                        {% endif %}
+                    </td>
                     {% endif %}
                 </tr>
             {% endfor %}
@@ -83,6 +98,42 @@
     })
     .then(data => {
         alert(data.message);
+        window.location.reload();
+    })
+    .catch(error => {
+        alert('Error: ' + error.message);
+    });
+}
+
+document.getElementById('leaveRequestForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        const formData = new FormData(this);
+        fetch('/submit-leave-request/', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.detail) {
+                throw new Error(data.detail);
+            }
+            alert('Leave request submitted successfully');
+            window.location.href = '/leave-requests/';
+        })
+        .catch(error => {
+            alert('Error: ' + error.message);
+        });
+    });
+
+    function deleteLeave(leaveId) {
+    if (!confirm('Are you sure you want to delete this leave request?')) return;
+
+    fetch('/delete-leave-request/' + leaveId, { method: 'DELETE' })
+    .then(response => response.json())
+    .then(data => {
+        if (data.detail) throw new Error(data.detail);
+        alert('Leave request deleted successfully');
         window.location.reload();
     })
     .catch(error => {
